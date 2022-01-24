@@ -17,7 +17,7 @@ pub struct Puzzle {
     pub puzzle: Vec<Vec<u8>>,
     pub pos_x: i64,
     pub pos_y: i64,
-    pub color: [f32; 4],
+    pub color: ([f32; 4], i32),
     pub offset: (usize, usize, usize),
     pub tests: [[(i8, i8); 5]; 4],
     pub test_num: i32,
@@ -36,7 +36,7 @@ impl Puzzle {
                             ((self.pos_y + i as i64) * (RESOLUTION) as i64) as f64 + 1.0,
                             18_f64,
                         );
-                        graphics::rectangle(self.color, square, c.transform, gl);
+                        graphics::rectangle(self.color.0, square, c.transform, gl);
                     }
                 }
             }
@@ -108,8 +108,6 @@ impl Puzzle {
     pub fn rotate_test(&mut self, board: [[u8; WIDTH]; HEIGTH + 2]) {
         let pos_x = self.pos_x;
         let pos_y = self.pos_y;
-        let left = self.offset.0 as i64;
-        let right = self.offset.1 as i64;
 
         for test in self.tests[self.test_num as usize] {
             let t1 = test.0 as i64;
@@ -118,14 +116,14 @@ impl Puzzle {
             let mut failed = false;
             'inner: for i in 0..self.puzzle.len() {
                 for j in 0..self.puzzle[0].len() {
-                    let x = pos_y + t1 + i as i64;
-                    let y = pos_x + left + t2 + j as i64;
+                    if self.puzzle[i][j] > 0 {
+                        let x = pos_y + t1 + i as i64;
+                        let y = pos_x + t2 + j as i64;
 
-                    println!("x:{x} y:{y}");
-
-                    if board[x as usize][y as usize] > 0 && self.puzzle[i][j] > 0 {
-                        failed = true;
-                        break 'inner;
+                        if board[x as usize][y as usize] > 0 {
+                            failed = true;
+                            break 'inner;
+                        }
                     }
                 }
             }
@@ -134,6 +132,18 @@ impl Puzzle {
                 self.pos_x += t2 as i64;
                 break;
             }
+        }
+    }
+
+    pub fn clone(&self) -> Puzzle {
+        Puzzle {
+            puzzle: self.puzzle.clone(),
+            pos_x: self.pos_x,
+            pos_y: self.pos_y,
+            test_num: self.test_num,
+            tests: self.tests,
+            color: self.color,
+            offset: self.offset,
         }
     }
 }
